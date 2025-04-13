@@ -1,0 +1,21 @@
+# This is a generated file. Not intended for manual editing.
+services:
+  kiwiapi:
+    build:
+      context: "/Users/sammidgley/coding/dotnet/Kiwi"
+      dockerfile: "KiwiAPI/Dockerfile"
+      target: "base"
+    command: []
+    entrypoint:
+    - "dotnet"
+    - "/app/bin/Debug/net9.0/KiwiAPI.dll"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+    image: "kiwiapi:dev"
+    ports: []
+    volumes:
+    - "/Users/sammidgley/coding/dotnet/Kiwi/KiwiAPI:/app:rw"
+    - "/Users/sammidgley/coding/dotnet/Kiwi:/src:rw"
+    - "/Users/sammidgley/.nuget/packages:/home/app/.nuget/packages"
+    working_dir: "/app"
