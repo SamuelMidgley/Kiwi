@@ -1,12 +1,42 @@
-using Dapper;
-using Kiwi.Core.Entities.Content;
-using Kiwi.Core.Interfaces.Content;
+using Kiwi.Application.Common.Models;
+using Kiwi.Application.Interfaces;
+using Kiwi.Core.Entities;
+using Kiwi.Infrastructure.Common;
 
 namespace Kiwi.Infrastructure.Data;
 
 public class ContentRepository(DataContext context) : IContentRepository
 {
-    public async Task<int> CreateContent(Content request)
+    public async Task<PaginatedList<Content>> Get(int pageNumber, int pageSize)
+    {
+        const string sql = """
+                               SELECT * 
+                               FROM Content
+                           """;
+        using var connection = context.CreateConnection();
+
+        return await connection.ToPaginatedListAsync<Content>(
+            sql,
+            parameters: null,
+            pageNumber,
+            pageSize);
+    }
+    
+    public async Task<Content?> GetById(int id)
+    {
+        const string sql = """
+                               SELECT * 
+                               FROM Content
+                               WHERE id = @id
+                           """;
+        using var connection = context.CreateConnection();
+
+        return await connection.QueryFirstOrDefaultAsync<Content>(
+            sql, 
+            new { id });
+    }
+
+    public async Task<int> Create(Content request)
     {
         var currentDateTime = DateTime.UtcNow;
         
@@ -25,5 +55,32 @@ public class ContentRepository(DataContext context) : IContentRepository
         });
 
         return newContentId;
+    }
+
+    public async Task<int> Update(int id, string? title, string? description)
+    {
+        using var connection = context.CreateConnection();
+
+        var rowsAffected = await connection.ExecuteAsync("""
+            UPDATE Content
+            SET 
+                date_updated = now(),
+                title = coalesce(@title, title),
+                description = coalesce(@description, description)
+            WHERE id = @id
+        """, new { id, title, description });
+
+        return rowsAffected;   
+    }
+
+    public async Task<int> Delete(int id)
+    {
+        const string sql = "DELETE FROM Content WHERE id = @id";
+        
+        using var connection = context.CreateConnection();
+        
+        var rowsAffected = await connection.ExecuteAsync(sql, new { id });
+        
+        return rowsAffected;
     }
 }

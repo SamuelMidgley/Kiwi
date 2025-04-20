@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Kiwi.WebApi.Controllers;
@@ -6,8 +7,8 @@ namespace Kiwi.WebApi.Controllers;
 public class HelloWorldController : ControllerBase
 {
     [HttpGet("api/hello-world")]
-    public ActionResult<string> Get()
+    public Ok<string> Get()
     {
-        return Ok("Hello World!");
+        return TypedResults.Ok("Hello World");
     }
 }

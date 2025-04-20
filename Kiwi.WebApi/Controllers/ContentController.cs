@@ -1,150 +1,59 @@
-using FluentValidation;
-using Kiwi.WebApi.Models.Content;
-using Kiwi.WebApi.Services.ContentCreation;
-using Kiwi.WebApi.Services.Interfaces;
+using Kiwi.Application.Common.Models;
+using Kiwi.Application.Content.Commands.CreateContent;
+using Kiwi.Application.Content.Commands.DeleteContent;
+using Kiwi.Application.Content.Commands.UpdateContent;
+using Kiwi.Application.Content.Queries.GetContent;
+using Kiwi.Application.Content.Queries.GetContentById;
+using Kiwi.Core.Entities;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Kiwi.WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class ContentController(
-    IContentService contentService, 
-    IContentCreationFactory contentCreationFactory,
-    IValidator<CreateContentRequest> createContentValidator,
-    IValidator<UpdateContentRequest> updateContentValidator,
-    ILogger<ContentController> logger) 
-    : ControllerBase
+public class ContentController(ISender sender) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<string>>> Get()
+    public async Task<Ok<PaginatedList<Content>>> Get([FromQuery] GetContentQuery query)
     {
-        try
-        {
-            var content = await contentService.GetContent();
-            return Ok(content);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to get content.");
-            return StatusCode(StatusCodes.Status500InternalServerError, 
-                "An error occurred while retrieving content.");
-        }
+        var content = await sender.Send(query);
+        
+        return TypedResults.Ok(content);
     }
-
+    
     [HttpGet("{id:int}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<Content>> GetContentById(int id)
+    public async Task<Ok<Content>> Get(int id)
     {
-        if (id <= 0)
-        {
-            return BadRequest("Invalid content ID.");
-        }
-
-        try
-        {
-            var content = await contentService.GetContentById(id);
-            return content is null ? NotFound() : Ok(content);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to get content with ID {ContentId}", id);
-            return StatusCode(StatusCodes.Status500InternalServerError,
-                "An error occurred while retrieving content.");
-        }
+        var content = await sender.Send(new GetContentByIdQuery(id));
+        
+        return TypedResults.Ok(content);
     }
 
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<Content>> CreateContent(CreateContentRequest request)
+    public async Task<Created<int>> Create([FromBody] CreateContentCommand command)
     {
-        var validationResults = await createContentValidator.ValidateAsync(request);
-
-        if (!validationResults.IsValid)
-        {
-            return BadRequest(validationResults.Errors.Select(e => e.ErrorMessage));
-        }
-
-        try
-        {
-            var contentCreationService = contentCreationFactory.GetContentCreationService(request.ContentType);
-            var content = await contentCreationService.CreateContent(request);
-
-            return CreatedAtAction(nameof(GetContentById), new { id = content.Id }, content);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to create content.");
-            return StatusCode(StatusCodes.Status500InternalServerError,
-                "An error occurred while creating content.");
-        }
+        var id = await sender.Send(command);
+        
+        return TypedResults.Created($"/content/{id}", id);
     }
 
     [HttpPatch("{id:int}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<Content>> UpdateContent(int id, UpdateContentRequest request)
+    public async Task<Results<NoContent, BadRequest>> Update([FromRoute] int id, [FromBody] UpdateContentCommand command)
     {
-        if (id <= 0)
-        {
-            return BadRequest("Invalid content ID.");
-        }
-
-        var validationResults = await updateContentValidator.ValidateAsync(request);
-
-        if (!validationResults.IsValid)
-        {
-            return BadRequest(validationResults.Errors.Select(e => e.ErrorMessage));
-        }
-
-        try
-        {
-            var content = await contentService.UpdateContent(id, request);
-            return Ok(content);
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound();
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to update content with ID {ContentId}", id);
-            return StatusCode(StatusCodes.Status500InternalServerError, 
-                "An error occurred while updating content.");
-        }
+        if (id != command.Id)
+            return TypedResults.BadRequest();
+        
+        await sender.Send(command);
+        
+        return TypedResults.NoContent();
     }
 
     [HttpDelete("{id:int}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<bool>> DeleteContent(int id)
+    public async Task<NoContent> Delete(int id)
     {
-        if (id <= 0)
-        {
-            return BadRequest("Invalid content ID.");
-        }
+        await sender.Send(new DeleteContentCommand(id));
 
-        try
-        {
-            var result = await contentService.DeleteContent(id);
-            return result ? NoContent() : NotFound();
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to delete content with ID {ContentId}", id);
-            return StatusCode(StatusCodes.Status500InternalServerError,
-                "An error occurred while deleting content.");
-        }
+        return TypedResults.NoContent();
     }
 }

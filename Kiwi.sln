@@ -15,6 +15,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kiwi.Application", "Kiwi.Ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kiwi.Infrastructure", "Kiwi.Infrastructure\Kiwi.Infrastructure.csproj", "{A7335ACA-6CBE-4DEB-A40F-AD97EC1366F5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{D54D40A7-34AB-4491-AC62-9BA345CAEE6C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kiwi.Application.UnitTests", "Kiwi.Application.UnitTests\Kiwi.Application.UnitTests.csproj", "{19FD7222-E870-4980-9A94-17A529061A88}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,5 +45,12 @@ Global
 		{A7335ACA-6CBE-4DEB-A40F-AD97EC1366F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A7335ACA-6CBE-4DEB-A40F-AD97EC1366F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A7335ACA-6CBE-4DEB-A40F-AD97EC1366F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19FD7222-E870-4980-9A94-17A529061A88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19FD7222-E870-4980-9A94-17A529061A88}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19FD7222-E870-4980-9A94-17A529061A88}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19FD7222-E870-4980-9A94-17A529061A88}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{19FD7222-E870-4980-9A94-17A529061A88} = {D54D40A7-34AB-4491-AC62-9BA345CAEE6C}
 	EndGlobalSection
 EndGlobal
